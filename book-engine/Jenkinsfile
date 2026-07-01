@@ -17,7 +17,7 @@ spec:
         mountPath: /home/jenkins/agent
 
   - name: buildah
-    image: quay.io/containers/buildah:latest
+    image: quay.io/containers/buildah:stable
     securityContext:
       privileged: true
     command: ["/bin/sh"]
