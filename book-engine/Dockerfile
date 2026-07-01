@@ -2,7 +2,7 @@ FROM docker.io/pandoc/latex:latest
 
 # Install Python + pip + dependencies
 RUN apk update && \
-    apk add --no-cache python3 py3-pip && \
+    apk add --no-cache python3 py3-pip bash && \
     rm -rf /var/cache/apk/*
 
 # Install Python dependencies
