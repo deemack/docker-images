@@ -1,0 +1,100 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: docker-image-builder
+spec:
+  restartPolicy: Never
+  containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:latest-jdk21
+    workingDir: /home/jenkins/agent
+    volumeMounts:
+      - name: workspace
+        mountPath: /home/jenkins/agent
+
+  - name: buildah
+    image: quay.io/containers/buildah:latest
+    securityContext:
+      privileged: true
+    command: ["/bin/sh"]
+    args: ["-c", "cat"]
+    tty: true
+    workingDir: /home/jenkins/agent
+    volumeMounts:
+      - name: registry-creds
+        mountPath: /root/.docker/config.json
+        subPath: .dockerconfigjson
+      - name: workspace
+        mountPath: /home/jenkins/agent
+
+  volumes:
+    - name: registry-creds
+      secret:
+        secretName: registry-creds
+    - name: workspace
+      emptyDir: {}
+"""
+        }
+    }
+
+    environment {
+        IMAGE_NAME = "docker.io/deemack/book-engine"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Bump Version') {
+            steps {
+                container('jnlp') {
+                    script {
+                        def version = readFile('VERSION').trim()
+                        def parts = version.tokenize('.')
+                        parts[2] = (parts[2].toInteger() + 1).toString()
+                        def newVersion = parts.join('.')
+                        writeFile file: 'VERSION', text: newVersion
+                        env.IMAGE_TAG = newVersion
+                        echo "Version bumped: ${version} -> ${newVersion}"
+                    }
+
+                    withCredentials([usernamePassword(credentialsId: 'github-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh """
+                        git config user.email "jenkins@bluegoat.org"
+                        git config user.name "Jenkins"
+                        git remote set-url origin https://\${GIT_USER}:\${GIT_PASS}@github.com/deemack/docker-images.git
+                        git checkout -b main || git checkout main
+                        git add VERSION
+                        git commit -m "Bump version to ${env.IMAGE_TAG} [skip ci]"
+                        git tag -a v${env.IMAGE_TAG} -m "Release v${env.IMAGE_TAG}"
+                        git push origin main
+                        git push origin v${env.IMAGE_TAG}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Build & Push Image') {
+            steps {
+                container('buildah') {
+                    sh """
+                    echo "Building image ${IMAGE_NAME}:${IMAGE_TAG}"
+                    buildah bud -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    buildah tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                    buildah push ${IMAGE_NAME}:${IMAGE_TAG}
+                    buildah push ${IMAGE_NAME}:latest
+                    """
+                }
+            }
+        }
+    }
+}
