@@ -53,31 +53,16 @@ spec:
             }
         }
 
-        stage('Bump Version') {
+        stage('Determine Tag') {
             steps {
                 container('jnlp') {
                     script {
-                        def version = readFile('book-engine/VERSION').trim()
-                        def parts = version.tokenize('.')
-                        parts[2] = (parts[2].toInteger() + 1).toString()
-                        def newVersion = parts.join('.')
-                        writeFile file: 'book-engine/VERSION', text: newVersion
-                        env.IMAGE_TAG = newVersion
-                        echo "Version bumped: ${version} -> ${newVersion}"
-                    }
+                        env.IMAGE_TAG = sh(
+                            script: "git rev-parse --short HEAD",
+                            returnStdout: true
+                        ).trim()
 
-                    withCredentials([usernamePassword(credentialsId: 'github-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                        sh """
-                        git config user.email "jenkins@bluegoat.org"
-                        git config user.name "Jenkins"
-                        git remote set-url origin https://\${GIT_USER}:\${GIT_PASS}@github.com/deemack/docker-images.git
-                        git checkout -b main || git checkout main
-                        git add book-engine/VERSION
-                        git commit -m "Bump version to ${env.IMAGE_TAG} [skip ci]"
-                        git tag -a v${env.IMAGE_TAG} -m "Release v${env.IMAGE_TAG}"
-                        git push origin main
-                        git push origin v${env.IMAGE_TAG} --force
-                        """
+                        echo "Using image tag: ${env.IMAGE_TAG}"
                     }
                 }
             }
@@ -88,8 +73,10 @@ spec:
                 container('buildah') {
                     sh """
                     echo "Building image ${IMAGE_NAME}:${IMAGE_TAG}"
+
                     buildah bud -t ${IMAGE_NAME}:${IMAGE_TAG} .
                     buildah tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+
                     buildah push ${IMAGE_NAME}:${IMAGE_TAG}
                     buildah push ${IMAGE_NAME}:latest
                     """
