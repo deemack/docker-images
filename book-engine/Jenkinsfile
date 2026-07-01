@@ -74,7 +74,7 @@ spec:
                     sh """
                     echo "Building image ${IMAGE_NAME}:${IMAGE_TAG}"
 
-                    buildah bud -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    buildah bud -t ${IMAGE_NAME}:${IMAGE_TAG} book-engine
                     buildah tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
 
                     buildah push ${IMAGE_NAME}:${IMAGE_TAG}
