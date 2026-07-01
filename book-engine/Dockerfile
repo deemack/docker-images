@@ -1,4 +1,4 @@
-FROM pandoc/latex:latest
+FROM docker.io/pandoc/latex:latest
 
 # Install Python + Pip
 RUN apt-get update && \
