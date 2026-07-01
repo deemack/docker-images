@@ -1,5 +1,5 @@
-# Minimal TeX Live base (no Perl, no apt, no apk)
-FROM ghcr.io/xu-cheng/texlive:latest
+# TeX Live base that Buildah can pull anonymously
+FROM texlive/texlive:latest
 
 # Install Pandoc (official binary)
 RUN curl -L https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-linux-amd64.tar.gz \
