@@ -8,7 +8,3 @@ RUN apk update && \
 # Install Python dependencies
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install --break-system-packages -r /tmp/requirements.txt
-
-# Copy your book engine scripts
-COPY engine /engine
-WORKDIR /engine
