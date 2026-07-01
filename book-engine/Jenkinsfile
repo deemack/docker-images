@@ -61,7 +61,7 @@ spec:
                         def parts = version.tokenize('.')
                         parts[2] = (parts[2].toInteger() + 1).toString()
                         def newVersion = parts.join('.')
-                        writeFile file: 'VERSION', text: newVersion
+                        writeFile file: 'book-engine/VERSION', text: newVersion
                         env.IMAGE_TAG = newVersion
                         echo "Version bumped: ${version} -> ${newVersion}"
                     }
