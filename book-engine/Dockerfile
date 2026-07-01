@@ -1,5 +1,5 @@
 # Base image: full TeX Live distribution (no Debian required)
-FROM texlive/texlive:latest
+FROM docker.io/texlive/texlive:latest
 
 # Install Pandoc manually (official tarball)
 RUN curl -L https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-linux-amd64.tar.gz \
