@@ -1,18 +1,16 @@
-# TeX Live base that Buildah can pull anonymously
 FROM docker.io/texlive/texlive:latest
 
 # Install Pandoc (official binary)
 RUN curl -L https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-linux-amd64.tar.gz \
     | tar xz --strip-components 1 -C /usr/local
 
-# Install Python manually (small footprint)
-RUN curl -L https://www.python.org/ftp/python/3.12.3/Python-3.12.3.tgz \
-    | tar xz && \
-    cd Python-3.12.3 && \
-    ./configure --enable-optimizations && \
-    make -j$(nproc) && \
-    make install && \
-    cd .. && rm -rf Python-3.12.3
+# Install prebuilt Python (no compiler needed)
+RUN curl -L https://github.com/indygreg/python-build-standalone/releases/download/20240524/cpython-3.12.3+20240524-x86_64-unknown-linux-gnu-install_only.tar.gz \
+    | tar xz -C /usr/local
+
+# Ensure python3 and pip3 are available
+RUN ln -s /usr/local/python/bin/python3 /usr/local/bin/python3 && \
+    ln -s /usr/local/python/bin/pip3 /usr/local/bin/pip3
 
 # Install MinIO client
 RUN curl -sSL https://dl.min.io/client/mc/release/linux-amd64/mc \
