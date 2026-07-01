@@ -22,6 +22,9 @@ RUN curl -L https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz 
         --no-interaction && \
     rm -rf install-tl-*
 
+# FIX: Add TeX Live binaries to PATH
+ENV PATH="/usr/local/texlive/2026/bin/x86_64-linux:${PATH}"
+
 # Install only the LaTeX packages you need
 RUN tlmgr install setspace graphics titlesec geometry fontspec
 
