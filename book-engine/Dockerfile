@@ -35,7 +35,3 @@ RUN curl -sSL https://dl.min.io/client/mc/release/linux-amd64/mc \
 # Install Python dependencies
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
-
-# Copy book engine
-COPY engine /engine
-WORKDIR /engine
